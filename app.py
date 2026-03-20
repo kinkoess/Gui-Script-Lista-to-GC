@@ -49,7 +49,7 @@ datos_input = st.text_area(
 
 # Lógica del mensaje de bienvenida
 if not datos_input:
-    contenedor_mensaje.info("💡 Por favor, pega la tabla de OneNote arriba para comenzar. (Puedes incluir una columna 'HORA' para agendar bloques de 70 min)")
+    contenedor_mensaje.info("💡 Por favor, pega la tabla de OneNote arriba para comenzar. (Opcional: columna 'HORA' para bloques de 70 min)")
     st.session_state['procesar'] = False
 else:
     contenedor_mensaje.empty()
@@ -113,8 +113,9 @@ if st.session_state.get('procesar') and datos_input:
         calendar_df['Start Date'] = pd.to_datetime(df_final['FECHA'] + f"-{anio}", format='%d-%m-%Y').dt.strftime('%m/%d/%Y')
         calendar_df['End Date'] = calendar_df['Start Date']
         
-        # --- LÓGICA DE HORA COMPATIBLE ---
-        if 'HORA' in df_final.columns:
+        # --- LÓGICA DE HORA HÍBRIDA ---
+        tiene_hora = 'HORA' in df_final.columns
+        if tiene_hora:
             calendar_df['Start Time'] = df_final['HORA']
             tiempos_fin = []
             for h in df_final['HORA']:
@@ -123,7 +124,7 @@ if st.session_state.get('procesar') and datos_input:
                     t_fin = t_inicio + timedelta(minutes=70)
                     tiempos_fin.append(t_fin.strftime("%H:%M"))
                 except:
-                    tiempos_fin.append("") # Manejo de error si la hora está mal escrita
+                    tiempos_fin.append("") 
             calendar_df['End Time'] = tiempos_fin
             calendar_df['All Day Event'] = 'FALSE'
         else:
@@ -144,7 +145,13 @@ if st.session_state.get('procesar') and datos_input:
             mime='text/csv',
             use_container_width=True
         )
-        st.dataframe(calendar_df[['Subject', 'Start Date']], use_container_width=True)
+
+        # --- PREVISUALIZACIÓN DINÁMICA ---
+        # Si tiene hora, mostramos las columnas de tiempo. Si no, solo fecha.
+        if tiene_hora:
+            st.dataframe(calendar_df[['Subject', 'Start Date', 'Start Time', 'End Time']], use_container_width=True)
+        else:
+            st.dataframe(calendar_df[['Subject', 'Start Date']], use_container_width=True)
 
         if st.button("🔄 Cargar otra tabla / Reiniciar"):
             st.session_state['procesar'] = False
