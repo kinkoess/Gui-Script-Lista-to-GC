@@ -17,7 +17,7 @@ st.markdown("""
         box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25) !important;
     }
     
-    /* Escondemos la etiqueta original */
+    /* Escondemos la etiqueta original del text_area */
     .stTextArea label {
         display: none;
     }
@@ -27,37 +27,35 @@ st.markdown("""
 # Título con salto de línea
 st.markdown("# 🦷 OdontoCalendar:  \n# Tabla OneNote a Google Calendar")
 
-# Inicializar estados si no existen
-if "procesar" not in st.session_state:
-    st.session_state['procesar'] = False
-
 st.subheader("1. Carga de Datos")
 
-# LÓGICA DINÁMICA: Solo muestra el info si el área está vacía
-# Usamos un contenedor vacío para poder quitar el mensaje al instante
-placeholder_info = st.empty()
+# CREAMOS UN CONTENEDOR PARA EL MENSAJE
+# Esto permite que el mensaje "vuele" en cuanto hay texto
+contenedor_mensaje = st.empty()
 
+# ÁREA DE TEXTO
 datos_input = st.text_area(
-    label="Input Invisible",
+    label="Input_Tabla",
     height=150, 
     placeholder="Pega aquí tu tabla de OneNote..."
 )
 
+# LÓGICA INSTANTÁNEA
 if not datos_input:
-    placeholder_info.info("💡 Por favor, pega la tabla de OneNote arriba para comenzar.")
+    contenedor_mensaje.info("💡 Por favor, pega la tabla de OneNote arriba para comenzar.")
+    # Resetear el estado de procesamiento si se borra el texto
     st.session_state['procesar'] = False
 else:
-    # En cuanto hay texto, el placeholder se limpia solo
-    placeholder_info.empty()
+    # SI HAY TEXTO, EL CONTENEDOR SE VACÍA INMEDIATAMENTE
+    contenedor_mensaje.empty()
     
-    # Botón de Procesar que aparece justo debajo
+    # Aparece el botón de procesar de una vez
     if st.button("🚀 Procesar Tabla Pegada", use_container_width=True):
         st.session_state['procesar'] = True
 
 # --- PROCESAMIENTO ---
-if st.session_state['procesar'] and datos_input:
+if st.session_state.get('procesar') and datos_input:
     try:
-        # Diccionario de abreviaciones
         abreviaciones = {
             "1° Teórica": "1° T.",
             "2° Teórica": "2° T.",
@@ -71,7 +69,7 @@ if st.session_state['procesar'] and datos_input:
             "2° Examen": "2° E."
         }
 
-        # Leer tabla
+        # Leer tabla (OneNote usa tabuladores \t)
         df = pd.read_csv(io.StringIO(datos_input.strip()), sep='\t')
         df.columns = df.columns.str.strip()
         df = df.apply(lambda x: x.str.strip() if x.dtype == "object" else x)
@@ -84,7 +82,6 @@ if st.session_state['procesar'] and datos_input:
         st.subheader("2. Filtra tu Calendario")
         categoria = st.selectbox("¿Qué calendario vas a actualizar ahora?", opciones_finales)
         
-        # Preparar eventos
         df_filtrado = df[df['EVALUACION'] == categoria].copy()
         
         def formatear_titulo(fila):
@@ -95,7 +92,6 @@ if st.session_state['procesar'] and datos_input:
 
         calendar_df = pd.DataFrame()
         calendar_df['Subject'] = df_filtrado.apply(formatear_titulo, axis=1)
-        # Año 2026 fijo por ahora
         calendar_df['Start Date'] = pd.to_datetime(df_filtrado['FECHA'] + "-2026", format='%d-%m-%Y').dt.strftime('%m/%d/%Y')
         calendar_df['End Date'] = calendar_df['Start Date']
         calendar_df['All Day Event'] = 'TRUE'
@@ -104,7 +100,7 @@ if st.session_state['procesar'] and datos_input:
 
         csv = calendar_df.to_csv(index=False).encode('utf-8')
         
-        st.success(f"✅ ¡Tabla lista! {len(calendar_df)} eventos de '{categoria}'")
+        st.success(f"✅ ¡Tabla detectada! {len(calendar_df)} eventos encontrados.")
         
         st.download_button(
             label=f"📥 Descargar {categoria}.csv",
@@ -117,4 +113,4 @@ if st.session_state['procesar'] and datos_input:
         st.dataframe(calendar_df[['Subject', 'Start Date']], use_container_width=True)
 
     except Exception as e:
-        st.error("❌ Error: La tabla no tiene el formato correcto (EVALUACION, ASIGNATURA, FECHA).")
+        st.error("❌ Error: La tabla no tiene el formato esperado. Asegúrate de copiar los encabezados.")
