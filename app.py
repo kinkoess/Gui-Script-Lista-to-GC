@@ -72,7 +72,7 @@ if st.session_state.get('procesar') and datos_input:
 
         st.divider()
         
-        # NUEVO PASO INTERMEDIO: Selección de Modo
+        # MODO DE EXPORTACIÓN
         st.subheader("2. Modo de Exportación")
         modo = st.radio(
             "¿Cómo quieres exportar tus eventos?",
@@ -85,11 +85,9 @@ if st.session_state.get('procesar') and datos_input:
 
         if modo == "Lista Completa (Todo en un solo archivo)":
             df_final = df.copy()
-            nombre_archivo = "Evaluaciones.csv"
+            nombre_archivo = "Calendario_Completo.csv"
             st.info("ℹ️ Se exportarán todos los eventos detectados en la tabla.")
-            
         else:
-            # Lógica de filtrado existente
             opciones_disponibles = [opt for opt in abreviaciones.keys() if opt in df['EVALUACION'].unique()]
             otros = [opt for opt in df['EVALUACION'].unique() if opt not in abreviaciones.keys()]
             opciones_finales = opciones_disponibles + otros
@@ -114,6 +112,9 @@ if st.session_state.get('procesar') and datos_input:
         calendar_df['Location'] = 'Universidad Mayor, Temuco'
         calendar_df['Private'] = 'TRUE'
 
+        # AJUSTE DE ÍNDICE: Partir desde 1 en lugar de 0
+        calendar_df.index = range(1, len(calendar_df) + 1)
+
         csv = calendar_df.to_csv(index=False).encode('utf-8')
         
         st.success(f"✅ ¡Datos listos! {len(calendar_df)} eventos encontrados.")
@@ -126,6 +127,7 @@ if st.session_state.get('procesar') and datos_input:
             use_container_width=True
         )
         
+        # Mostrar tabla con el índice corregido
         st.dataframe(calendar_df[['Subject', 'Start Date']], use_container_width=True)
 
     except Exception as e:
