@@ -19,7 +19,7 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 # Título con salto de línea
-st.markdown("# 🦷 OdontoCalendar:  \n# Tabla de fechas OneNote a Google Calendar")
+st.markdown("# 🦷 OdontoCalendar:  \n# Tabla de fechas OneNote a    Google Calendar")
 
 # --- LÓGICA DE REINICIO ---
 if 'procesar' not in st.session_state:
