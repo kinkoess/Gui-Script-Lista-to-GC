@@ -15,7 +15,8 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-st.title("🦷 OdontoCalendar: OneNote a Google")
+st.title("🦷 OdontoCalendar: 
+Tabla OneNote a Google Calendar")
 
 # 1. Entrada de datos
 st.subheader("1. Pega tu tabla de OneNote")
@@ -30,9 +31,9 @@ abreviaciones = {
     "1° Evaluación Clínica": "1° E.C.",
     "2° Evaluación Clínica": "2° E.C.",
     "Caso Clínico": "C.C.",
-    "Presentación CC": "P.CC",
-    "1° Examen": "1° E.",
-    "2° Examen": "2° E."
+    "Presentación CC": "P.CC.",
+    "1° Examen": "1° Ex.",
+    "2° Examen": "2° Ex."
 }
 
 if datos_input:
