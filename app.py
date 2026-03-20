@@ -4,7 +4,7 @@ import io
 from datetime import datetime, timedelta
 
 # Configuración de la página
-st.set_page_config(page_title="OdontoCalendar Tool", page_icon="🦷")
+st.set_page_config(page_title="Calendarización Automática", page_icon="🦷")
 
 # --- ESTILO CSS PERSONALIZADO ---
 st.markdown("""
@@ -19,7 +19,7 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 # Título con salto de línea
-st.markdown("# 🦷 OdontoCalendar:  \n# Tabla OneNote a Google Calendar")
+st.markdown("# 🦷 OdontoCalendar:  \n# Tabla de fechas OneNote a Google Calendar")
 
 # --- LÓGICA DE REINICIO ---
 if 'procesar' not in st.session_state:
