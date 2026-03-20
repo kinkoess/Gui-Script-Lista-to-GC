@@ -29,8 +29,7 @@ st.markdown("# 🦷 OdontoCalendar:  \n# Tabla OneNote a Google Calendar")
 
 st.subheader("1. Carga de Datos")
 
-# CREAMOS UN CONTENEDOR PARA EL MENSAJE
-# Esto permite que el mensaje "vuele" en cuanto hay texto
+# Contenedor para el mensaje inicial
 contenedor_mensaje = st.empty()
 
 # ÁREA DE TEXTO
@@ -40,22 +39,19 @@ datos_input = st.text_area(
     placeholder="Pega aquí tu tabla de OneNote..."
 )
 
-# LÓGICA INSTANTÁNEA
+# Lógica del mensaje de bienvenida
 if not datos_input:
     contenedor_mensaje.info("💡 Por favor, pega la tabla de OneNote arriba para comenzar.")
-    # Resetear el estado de procesamiento si se borra el texto
     st.session_state['procesar'] = False
 else:
-    # SI HAY TEXTO, EL CONTENEDOR SE VACÍA INMEDIATAMENTE
     contenedor_mensaje.empty()
-    
-    # Aparece el botón de procesar de una vez
     if st.button("🚀 Procesar Tabla Pegada", use_container_width=True):
         st.session_state['procesar'] = True
 
 # --- PROCESAMIENTO ---
 if st.session_state.get('procesar') and datos_input:
     try:
+        # Diccionario de abreviaciones
         abreviaciones = {
             "1° Teórica": "1° T.",
             "2° Teórica": "2° T.",
@@ -69,21 +65,41 @@ if st.session_state.get('procesar') and datos_input:
             "2° Examen": "2° E."
         }
 
-        # Leer tabla (OneNote usa tabuladores \t)
+        # Leer tabla
         df = pd.read_csv(io.StringIO(datos_input.strip()), sep='\t')
         df.columns = df.columns.str.strip()
         df = df.apply(lambda x: x.str.strip() if x.dtype == "object" else x)
-        
-        opciones_disponibles = [opt for opt in abreviaciones.keys() if opt in df['EVALUACION'].unique()]
-        otros = [opt for opt in df['EVALUACION'].unique() if opt not in abreviaciones.keys()]
-        opciones_finales = opciones_disponibles + otros
 
         st.divider()
-        st.subheader("2. Filtra tu Calendario")
-        categoria = st.selectbox("¿Qué calendario vas a actualizar ahora?", opciones_finales)
         
-        df_filtrado = df[df['EVALUACION'] == categoria].copy()
-        
+        # NUEVO PASO INTERMEDIO: Selección de Modo
+        st.subheader("2. Modo de Exportación")
+        modo = st.radio(
+            "¿Cómo quieres exportar tus eventos?",
+            ["Lista Completa (Todo en un solo archivo)", "Filtrar por Categoría (Separar calendarios)"],
+            index=0
+        )
+
+        df_final = pd.DataFrame()
+        nombre_archivo = ""
+
+        if modo == "Lista Completa (Todo en un solo archivo)":
+            df_final = df.copy()
+            nombre_archivo = "Calendario_Completo.csv"
+            st.info("ℹ️ Se exportarán todos los eventos detectados en la tabla.")
+            
+        else:
+            # Lógica de filtrado existente
+            opciones_disponibles = [opt for opt in abreviaciones.keys() if opt in df['EVALUACION'].unique()]
+            otros = [opt for opt in df['EVALUACION'].unique() if opt not in abreviaciones.keys()]
+            opciones_finales = opciones_disponibles + otros
+
+            st.subheader("3. Filtra tu Calendario")
+            categoria = st.selectbox("¿Qué calendario vas a actualizar ahora?", opciones_finales)
+            df_final = df[df['EVALUACION'] == categoria].copy()
+            nombre_archivo = f"{categoria}.csv"
+
+        # --- GENERACIÓN DEL FORMATO GOOGLE ---
         def formatear_titulo(fila):
             eval_orig = fila['EVALUACION']
             asignatura = fila['ASIGNATURA']
@@ -91,8 +107,8 @@ if st.session_state.get('procesar') and datos_input:
             return f"{abrev} {asignatura}"
 
         calendar_df = pd.DataFrame()
-        calendar_df['Subject'] = df_filtrado.apply(formatear_titulo, axis=1)
-        calendar_df['Start Date'] = pd.to_datetime(df_filtrado['FECHA'] + "-2026", format='%d-%m-%Y').dt.strftime('%m/%d/%Y')
+        calendar_df['Subject'] = df_final.apply(formatear_titulo, axis=1)
+        calendar_df['Start Date'] = pd.to_datetime(df_final['FECHA'] + "-2026", format='%d-%m-%Y').dt.strftime('%m/%d/%Y')
         calendar_df['End Date'] = calendar_df['Start Date']
         calendar_df['All Day Event'] = 'TRUE'
         calendar_df['Location'] = 'Universidad Mayor, Temuco'
@@ -100,12 +116,12 @@ if st.session_state.get('procesar') and datos_input:
 
         csv = calendar_df.to_csv(index=False).encode('utf-8')
         
-        st.success(f"✅ ¡Tabla detectada! {len(calendar_df)} eventos encontrados.")
+        st.success(f"✅ ¡Datos listos! {len(calendar_df)} eventos encontrados.")
         
         st.download_button(
-            label=f"📥 Descargar {categoria}.csv",
+            label=f"📥 Descargar {nombre_archivo}",
             data=csv,
-            file_name=f"{categoria}.csv",
+            file_name=nombre_archivo,
             mime='text/csv',
             use_container_width=True
         )
