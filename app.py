@@ -15,8 +15,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-st.title("🦷 OdontoCalendar: 
-Tabla OneNote a Google Calendar")
+st.title("# 🦷 OdontoCalendar:  \n# Tabla OneNote a Google Calendar")
 
 # 1. Entrada de datos
 st.subheader("1. Pega tu tabla de OneNote")
