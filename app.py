@@ -84,7 +84,7 @@ if st.session_state.get('procesar') and datos_input:
 
         if modo == "Lista Completa (Todo en un solo archivo)":
             df_final = df.copy()
-            nombre_archivo = "Calendario_Completo.csv"
+            nombre_archivo = "Evaluaciones.csv"
             st.info("ℹ️ Se exportarán todos los eventos detectados en la tabla.")
         else:
             opciones_disponibles = [opt for opt in abreviaciones.keys() if opt in df['EVALUACION'].unique()]
